@@ -48,9 +48,9 @@
 #define SWITCH_PIN_1 2
 #define SWITCH_PIN_2 3
 #define RELAY_PIN 4  // Arduino Digital I/O pin number for first relay (second on pin+1 etc)
-#define CHILD_ID_RELAY 1
-#define CHILD_ID_SWITCH_1 2
-#define CHILD_ID_SWITCH_2 3
+#define CHILD_ID_RELAY 4
+#define CHILD_ID_SWITCH_1 5
+#define CHILD_ID_SWITCH_2 6
 
 #define RELAY_ON 1  // GPIO value to write to turn on attached relay
 #define RELAY_OFF 0 // GPIO value to write to turn off attached relay
@@ -59,12 +59,12 @@ MyMessage msgRelay(CHILD_ID_RELAY, V_STATUS);
 MyMessage msgSwitch1(CHILD_ID_SWITCH_1, V_STATUS);
 MyMessage msgSwitch2(CHILD_ID_SWITCH_2, V_STATUS);
 
-int AntiguoValor1 = 0;
-int AntiguoValor2 = 1;
+int estadoAnterior = 0;
 bool estado;
 
 void before()
 {
+  Serial.begin(115200);
 	  pinMode(SWITCH_PIN_1, INPUT_PULLUP);
     pinMode(SWITCH_PIN_2, OUTPUT);
     digitalWrite (SWITCH_PIN_2, LOW);
@@ -80,7 +80,7 @@ void setup()
 void presentation()
 {
 sendSketchInfo("Double Switch Sensor with Relay", "1.1");
-present(CHILD_ID_RELAY, S_BINARY);
+present(CHILD_ID_RELAY, S_BINARY, "Relay");
 present(CHILD_ID_SWITCH_1, S_BINARY);
 present(CHILD_ID_SWITCH_2, S_BINARY);
 	
@@ -92,16 +92,27 @@ void loop()
 
   int  switch1 = digitalRead(SWITCH_PIN_1);
 
-  if(AntiguoValor1 != switch1 || AntiguoValor2 != 0){
-    if(digitalRead(SWITCH_PIN_1) == LOW){
+  if(switch1 != estadoAnterior){
+    Serial.println("Estamos en el aqui");
+    send(msgRelay.set(switch1));
+        if(digitalRead(SWITCH_PIN_1) == LOW){
+          Serial.println("Estamos en el if");
           digitalWrite(RELAY_PIN, LOW);
           estado = false;
+          estadoAnterior = estado;
       }else{
         digitalWrite(RELAY_PIN, HIGH);
+        Serial.println("Estamos en el else");
         estado = true;
+        estadoAnterior = estado;
         }
-      send(msgRelay.set(estado));
     }
+
+
+
+    
+
+  
    delay(100);
     /*
   if (digitalRead(SWITCH_PIN_1) == LOW){
@@ -117,7 +128,7 @@ void loop()
 void receive(const MyMessage &message)
 {
 	// We only expect one type of message from controller. But we better check anyway.
-	if (message.type==V_STATUS  && message.sensor == CHILD_ID_RELAY) {
+	if (message.type==V_STATUS){
 		 estado = message.getBool();
 		digitalWrite(RELAY_PIN, estado?RELAY_ON:RELAY_OFF);
 		// Store state in eeprom
