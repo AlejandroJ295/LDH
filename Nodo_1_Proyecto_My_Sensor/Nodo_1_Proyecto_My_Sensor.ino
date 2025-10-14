@@ -60,7 +60,8 @@ MyMessage msgSwitch1(CHILD_ID_SWITCH_1, V_STATUS);
 MyMessage msgSwitch2(CHILD_ID_SWITCH_2, V_STATUS);
 
 int estadoAnterior = 0;
-bool estado;
+bool estado = false;
+bool estadoAnteriorRelay;
 
 void before()
 {
@@ -91,30 +92,46 @@ void loop()
 {
 
   int  switch1 = digitalRead(SWITCH_PIN_1);
+  int relay = digitalRead(RELAY_PIN);
 
   if(switch1 != estadoAnterior){
     Serial.println("Estamos en el aqui");
-    send(msgRelay.set(switch1));
+    send(msgRelay.set(!relay));
+    Serial.println("Estamos en el if");
+    digitalWrite(RELAY_PIN, !relay);
+    estado = !estado;
+    estadoAnterior = estado;
+  }
+/*
+ * 
+ *   int  switch1 = digitalRead(SWITCH_PIN_1);
+if(switch1 != estadoAnteriorSwitch){
+    Serial.println("Estamos en el aqui");
+    send(msgRelay.set(!digitalRead(RELAY_PIN)));
         if(digitalRead(SWITCH_PIN_1) == LOW){
           Serial.println("Estamos en el if");
           digitalWrite(RELAY_PIN, LOW);
           estado = false;
-          estadoAnterior = estado;
+          estadoAnteriorSwitch = estado;
       }else{
         digitalWrite(RELAY_PIN, HIGH);
         Serial.println("Estamos en el else");
         estado = true;
-        estadoAnterior = estado;
+        estadoAnteriorSwitch = estado;
         }
+
     }
-
-
-
-    
-
-  
-   delay(100);
+  int  switch1 = digitalRead(SWITCH_PIN_1);
+  bool estadoRelay = digitalRead(RELAY_PIN);
+  if(switch1 != estadoAnteriorSwitch){
+    estadoRelay = !estadoAnteriorRelay;
+    send(msgRelay.set(estadoRelay));
+    digitalWrite(RELAY_PIN, estadoRelay);
+    estadoAnteriorSwitch = switch1;
+    }
+    */
     /*
+     *   
   if (digitalRead(SWITCH_PIN_1) == LOW){
     digitalWrite(RELAY_PIN, LOW);
     send(msgRelay.set(LOW));
@@ -129,8 +146,7 @@ void receive(const MyMessage &message)
 {
 	// We only expect one type of message from controller. But we better check anyway.
 	if (message.type==V_STATUS){
-		 estado = message.getBool();
-		digitalWrite(RELAY_PIN, estado?RELAY_ON:RELAY_OFF);
+		digitalWrite(RELAY_PIN, message.getBool()?RELAY_ON:RELAY_OFF);
 		// Store state in eeprom
 		saveState(message.sensor, message.getBool());
 		// Write some debug info
