@@ -1,4 +1,4 @@
-**
+/*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -36,8 +36,10 @@
 
 // Enable and select radio type attached 
 #define MY_RADIO_RF24
-//#define MY_RADIO_RFM69
-//#define MY_RS485
+#define MY_RF24_CHANNEL 49
+#define MY_RF24_CE_PIN 9
+#define MY_RF24_CS_PIN 10
+#define MY_NODE_ID 91
  
 #include <SPI.h>
 #include <MySensors.h>  
@@ -45,7 +47,8 @@
 
 // Set this to the pin you connected the DHT's data pin to
 #define DHT_DATA_PIN 3
-
+int BATTERY_SENSE_PIN = A0;
+int oldBatteryPcnt = 0;
 // Set this offset if the sensor has a permanent small offset to the real temperatures.
 // In Celsius degrees (as measured by the device)
 #define SENSOR_TEMP_OFFSET 0
@@ -62,6 +65,7 @@ static const uint8_t FORCE_UPDATE_N_READS = 10;
 
 #define CHILD_ID_HUM 0
 #define CHILD_ID_TEMP 1
+#define CHILD_ID_BATTERY 4
 
 float lastTemp;
 float lastHum;
@@ -71,6 +75,7 @@ bool metric = true;
 
 MyMessage msgHum(CHILD_ID_HUM, V_HUM);
 MyMessage msgTemp(CHILD_ID_TEMP, V_TEMP);
+MyMessage voltageMsg(CHILD_ID_BATTERY, V_VOLTAGE);
 DHT dht;
 
 
@@ -78,17 +83,21 @@ void presentation()
 { 
   // Send the sketch version information to the gateway
   sendSketchInfo("TemperatureAndHumidity", "1.1");
-  
+  sendSketchInfo("Battery Metter", "1.1");
   // Register all sensors to gw (they will be created as child devices)
   present(CHILD_ID_HUM, S_HUM);
   present(CHILD_ID_TEMP, S_TEMP);
-  
+  present(CHILD_ID_BATTERY, S_MULTIMETER, "Battery Voltage");
   metric = getControllerConfig().isMetric;
 }
 
 
 void setup()
 {
+  //analogReference(INTERNAL1V1);
+
+  analogReference(INTERNAL);
+
   dht.setup(DHT_DATA_PIN); // set data pin of DHT sensor
   if (UPDATE_INTERVAL <= dht.getMinimumSamplingPeriod()) {
     Serial.println("Warning: UPDATE_INTERVAL is smaller than supported by the sensor!");
@@ -101,6 +110,37 @@ void setup()
 
 void loop()      
 {  
+  // get the battery Voltage
+    int sensorValue = analogRead(BATTERY_SENSE_PIN);
+#ifdef MY_DEBUG
+    Serial.println(sensorValue);
+#endif
+
+    // 1M, 470K divider across battery and using internal ADC ref of 1.1V
+    // Sense point is bypassed with 0.1 uF cap to reduce noise at that point
+    // ((1e6+470e3)/470e3)*1.1 = Vmax = 3.44 Volts
+    // 3.44/1023 = Volts per bit = 0.003363075
+
+    int batteryPcnt = sensorValue / 10;
+    float voltage = sensorValue * (1.1 / 1023.0) * 2;
+#ifdef MY_DEBUG
+    float batteryV  = sensorValue * 0.003363075;
+    Serial.print("Battery Voltage: ");
+    Serial.print(batteryV);
+    Serial.println(" V");
+
+    Serial.print("Battery percent: ");
+    Serial.print(batteryPcnt);
+    Serial.println(" %");
+#endif
+    send(voltageMsg.set(batteryV, 2)); 
+    if (oldBatteryPcnt != batteryPcnt) {
+        // Power up radio after sleep
+        sendBatteryLevel(batteryPcnt);
+        
+        oldBatteryPcnt = batteryPcnt;
+    }
+  
   // Force reading sensor, so it works also after sleep()
   dht.readSensor(true);
   
