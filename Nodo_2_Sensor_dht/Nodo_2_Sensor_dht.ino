@@ -1,3 +1,5 @@
+
+
 /*
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
@@ -44,11 +46,10 @@
 #include <SPI.h>
 #include <MySensors.h>  
 #include <DHT.h>
+#include <Vcc.h>
 
 // Set this to the pin you connected the DHT's data pin to
 #define DHT_DATA_PIN 3
-int BATTERY_SENSE_PIN = A0;
-int oldBatteryPcnt = 0;
 // Set this offset if the sensor has a permanent small offset to the real temperatures.
 // In Celsius degrees (as measured by the device)
 #define SENSOR_TEMP_OFFSET 0
@@ -73,9 +74,15 @@ uint8_t nNoUpdatesTemp;
 uint8_t nNoUpdatesHum;
 bool metric = true;
 
+const float VccMin = 3.7;
+const float VccMax = 4.2;
+int oldBatteryPcnt = 0;
+Vcc vcc;
+#define VCC_ID 3
+MyMessage ch_comm_vcc(VCC_ID, V_VOLTAGE);
+
 MyMessage msgHum(CHILD_ID_HUM, V_HUM);
 MyMessage msgTemp(CHILD_ID_TEMP, V_TEMP);
-MyMessage voltageMsg(CHILD_ID_BATTERY, V_VOLTAGE);
 DHT dht;
 
 
@@ -87,7 +94,7 @@ void presentation()
   // Register all sensors to gw (they will be created as child devices)
   present(CHILD_ID_HUM, S_HUM);
   present(CHILD_ID_TEMP, S_TEMP);
-  present(CHILD_ID_BATTERY, S_MULTIMETER, "Battery Voltage");
+  present(VCC_ID, S_MULTIMETER);
   metric = getControllerConfig().isMetric;
 }
 
@@ -96,7 +103,6 @@ void setup()
 {
   //analogReference(INTERNAL1V1);
 
-  analogReference(INTERNAL);
 
   dht.setup(DHT_DATA_PIN); // set data pin of DHT sensor
   if (UPDATE_INTERVAL <= dht.getMinimumSamplingPeriod()) {
@@ -110,10 +116,8 @@ void setup()
 
 void loop()      
 {  
-  // get the battery Voltage
-    int sensorValue = analogRead(BATTERY_SENSE_PIN);
+  // get the battery Voltage 
 #ifdef MY_DEBUG
-    Serial.println(sensorValue);
 #endif
 
     // 1M, 470K divider across battery and using internal ADC ref of 1.1V
@@ -121,24 +125,30 @@ void loop()
     // ((1e6+470e3)/470e3)*1.1 = Vmax = 3.44 Volts
     // 3.44/1023 = Volts per bit = 0.003363075
 
-    int batteryPcnt = sensorValue / 10;
-    float voltage = sensorValue * (1.1 / 1023.0) * 2;
+    //int batteryPcnt = sensorValue / 10;
+    //float voltage = sensorValue * (1.1 / 1023.0) * 2;
 #ifdef MY_DEBUG
-    float batteryV  = sensorValue * 0.003363075;
-    Serial.print("Battery Voltage: ");
-    Serial.print(batteryV);
-    Serial.println(" V");
+//    float batteryV  = sensorValue * 0.003363075;
+   // Serial.print("Battery Voltage: ");
+   // Serial.print(batteryV);
+    //Serial.println(" V");
 
-    Serial.print("Battery percent: ");
-    Serial.print(batteryPcnt);
-    Serial.println(" %");
+  //  Serial.print("Battery percent: ");
+    //Serial.print(batteryPcnt);
+    //Serial.println(" %");
 #endif
-    send(voltageMsg.set(batteryV, 2)); 
-    if (oldBatteryPcnt != batteryPcnt) {
+
+    int voltage = Vcc::measure(100, 1100);
+    int batteryPercent = static_cast<int>(100.0 * (voltage - VccMin) / (VccMax - VccMin));
+    //if (batteryPercent > 100) batteryPercent = 100;
+   // if (batteryPercent < 0)   batteryPercent = 0;
+ // función de MySensor que envía el procentaje
+    send(ch_comm_vcc.set(voltage, 2)); 
+    if (oldBatteryPcnt != batteryPercent) {
         // Power up radio after sleep
-        sendBatteryLevel(batteryPcnt);
+        sendBatteryLevel(batteryPercent);
         
-        oldBatteryPcnt = batteryPcnt;
+        oldBatteryPcnt = batteryPercent;
     }
   
   // Force reading sensor, so it works also after sleep()
