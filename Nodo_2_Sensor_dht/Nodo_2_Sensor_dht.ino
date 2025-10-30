@@ -56,7 +56,7 @@
 
 // Sleep time between sensor updates (in milliseconds)
 // Must be >1000ms for DHT22 and >2000ms for DHT11
-static const uint64_t UPDATE_INTERVAL = 60000;
+static const uint64_t UPDATE_INTERVAL = 10000;
 
 // Force sending an update of the temperature after n sensor reads, so a controller showing the
 // timestamp of the last update doesn't show something like 3 hours in the unlikely case, that
@@ -74,7 +74,7 @@ uint8_t nNoUpdatesTemp;
 uint8_t nNoUpdatesHum;
 bool metric = true;
 
-const float VccMin = 3.7;
+const float VccMin = 3.0;
 const float VccMax = 4.2;
 int oldBatteryPcnt = 0;
 Vcc vcc;
@@ -95,7 +95,7 @@ void presentation()
   present(CHILD_ID_HUM, S_HUM);
   present(CHILD_ID_TEMP, S_TEMP);
   present(VCC_ID, S_MULTIMETER);
-  metric = getControllerConfig().isMetric;
+  //metric = getControllerConfig().isMetric;
 }
 
 
@@ -139,18 +139,24 @@ void loop()
 #endif
 
     int voltage = Vcc::measure(100, 1100);
-    int batteryPercent = static_cast<int>(100.0 * (voltage - VccMin) / (VccMax - VccMin));
+    int batteryPercent = static_cast<int>(100.0 * ((voltage/ 1000.0 - 3) / 1.2));
     //if (batteryPercent > 100) batteryPercent = 100;
    // if (batteryPercent < 0)   batteryPercent = 0;
  // función de MySensor que envía el procentaje
-    send(ch_comm_vcc.set(voltage, 2)); 
+    send(ch_comm_vcc.set(voltage / 1000.0, 2)); 
+
+    if(batteryPercent > 100) batteryPercent = 100;
+     if(batteryPercent <0) batteryPercent = 0;
+
+     sendBatteryLevel(batteryPercent);
+    /*
     if (oldBatteryPcnt != batteryPercent) {
         // Power up radio after sleep
-        sendBatteryLevel(batteryPercent);
+        
         
         oldBatteryPcnt = batteryPercent;
     }
-  
+  */
   // Force reading sensor, so it works also after sleep()
   dht.readSensor(true);
   
