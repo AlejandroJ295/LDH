@@ -44,13 +44,12 @@
 /************************************ User defined key data ***************************************/
 
 /** @brief The user-defined HMAC key to use unless @ref GENERATE_HMAC_KEY is set */
-#define MY_HMAC_KEY 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
-
+#define MY_HMAC_KEY 0X20,0XBC,0XFD,0X91,0X50,0X98,0X73,0X84,0X51,0X82,0XE8,0X1A,0X76,0X91,0XA6,0X86,0XC4,0XCE,0XAA,0X9A,0X93,0X81,0XF7,0XEA,0XF6,0X9D,0XA,0XA7,0XAA,0XA3,0X1,0XC0
 /** @brief The user-defined AES key to store in EEPROM unless @ref GENERATE_AES_KEY is set */
-#define MY_AES_KEY 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
+//#define MY_AES_KEY 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
 
 /** @brief The user-defined soft serial to use for soft signing unless @ref GENERATE_SOFT_SERIAL is set */
-#define MY_SOFT_SERIAL 0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF
+#define MY_SOFT_SERIAL 0X68,0X58,0XDA,0XF4,0X4A,0X59,0X23,0X47,0XF3
 
 /***************************** Flags for guided personalization flow ******************************/
 
@@ -407,10 +406,10 @@ static uint8_t user_hmac_key[32] = {MY_HMAC_KEY};
 static uint8_t user_soft_serial[9] = {MY_SOFT_SERIAL};
 #endif
 
-#if defined(GENERATE_AES_KEY) || defined(STORE_AES_KEY)
+//#if defined(GENERATE_AES_KEY) || defined(STORE_AES_KEY)
 /* @brief The data to store as AES key in EEPROM */
-static uint8_t user_aes_key[16] = {MY_AES_KEY};
-#endif
+//static uint8_t user_aes_key[16] = {MY_AES_KEY};
+//#endif
 
 #ifndef USE_SOFT_SIGNING
 const int sha204Pin = MY_SIGNING_ATSHA204_PIN; //!< The IO pin to use for ATSHA204A
@@ -727,16 +726,7 @@ static void store_keys(void)
 	print_hex_buffer(user_hmac_key, 32);
 	Serial.println(F(" |"));
 #endif
-#ifdef STORE_AES_KEY
-	Serial.print(F("| AES    | "));
-	if (!store_aes_key_data(user_aes_key)) {
-		Serial.print(F("FAILED | "));
-	} else {
-		Serial.print(F("OK     | "));
-	}
-	print_hex_buffer(user_aes_key, 16);
-	Serial.println(F("                                 |"));
-#endif
+
 #ifdef STORE_SOFT_SERIAL
 	Serial.print(F("| SERIAL | "));
 	if (has_device_unique_id) {

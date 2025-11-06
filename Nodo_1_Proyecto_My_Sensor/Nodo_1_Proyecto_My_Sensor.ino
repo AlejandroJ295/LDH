@@ -1,4 +1,4 @@
-//#define MY_DEBUG
+#define MY_DEBUG
 
 #define MY_DEBUG_VERBOSE_SIGNING
 #define MY_SIGNING_SOFT
