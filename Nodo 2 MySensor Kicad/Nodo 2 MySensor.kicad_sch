@@ -4745,7 +4745,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "2060-452_998-404:WAGO_2060-452_998-404"
+		(property "Footprint" "ee:WAGO_2060-452_998-404"
 			(at 33.02 96.52 0)
 			(effects
 				(font
