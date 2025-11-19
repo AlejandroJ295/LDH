@@ -37,9 +37,9 @@
         "other_text_thickness": 0.15,
         "other_text_upright": false,
         "pads": {
-          "drill": 1.0,
-          "height": 1.7,
-          "width": 1.7
+          "drill": 1.27,
+          "height": 2.032,
+          "width": 2.032
         },
         "silk_line_width": 0.15,
         "silk_text_italic": false,
@@ -196,7 +196,8 @@
         0.0,
         0.2,
         0.4,
-        0.6
+        0.6,
+        1.0
       ],
       "tuning_pattern_settings": {
         "diff_pair_defaults": {
@@ -483,7 +484,7 @@
     "pinned_symbol_libs": []
   },
   "meta": {
-    "filename": "Nodo 2 MySensor.kicad_pro",
+    "filename": "Nodo 1 MySensor Kicad.kicad_pro",
     "version": 3
   },
   "net_settings": {
@@ -519,7 +520,7 @@
       "gencad": "",
       "idf": "",
       "netlist": "",
-      "plot": "Gerbers",
+      "plot": "",
       "pos_files": "",
       "specctra_dsn": "",
       "step": "",
