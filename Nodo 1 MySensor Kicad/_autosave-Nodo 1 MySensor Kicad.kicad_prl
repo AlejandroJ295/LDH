@@ -15,13 +15,12 @@
       "vias": 1.0,
       "zones": 0.6
     },
-    "ratsnest_display_mode": 0,
     "selection_filter": {
       "dimensions": true,
       "footprints": true,
       "graphics": true,
       "keepouts": true,
-      "lockedItems": true,
+      "lockedItems": false,
       "otherItems": true,
       "pads": true,
       "text": true,
@@ -42,13 +41,16 @@
       "tracks",
       "drc_errors",
       "drawing_sheet",
+      "bitmaps",
       "pads",
       "zones",
       "drc_warnings",
       "drc_exclusions",
+      "locked_item_shadows",
+      "conflict_shadows",
       "shapes"
     ],
-    "visible_layers": "00000000_00000000_0fffffff_ffffffff",
+    "visible_layers": "ffffffff_ffffffff_ffffffff_ffffffff",
     "zone_display_mode": 0
   },
   "git": {
@@ -57,7 +59,7 @@
     "ssh_key": ""
   },
   "meta": {
-    "filename": "Nodo 1 MySensor Kicad.kicad_prl",
+    "filename": "_autosave-Nodo 1 MySensor Kicad.kicad_prl",
     "version": 5
   },
   "net_inspector_panel": {
@@ -86,16 +88,16 @@
       9
     ],
     "col_widths": [
-      10,
-      10,
-      10,
-      10,
-      10,
-      10,
-      10,
-      10,
-      10,
-      51
+      162,
+      147,
+      91,
+      102,
+      97,
+      107,
+      108,
+      107,
+      91,
+      91
     ],
     "custom_group_rules": [],
     "expanded_rows": [],
